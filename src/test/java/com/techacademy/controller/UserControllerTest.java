@@ -1,11 +1,14 @@
 package com.techacademy.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -60,4 +63,42 @@ class UserControllerTest {
         assertEquals(user.getId(), 1);
         assertEquals(user.getName(), "キラメキ太郎");
     }
+
+    @Test
+    @DisplayName("User一覧画面")
+    @WithMockUser
+    void testGetList() throws Exception {
+        // HTTPリクエストに対するレスポンスの検証
+        MvcResult result = mockMvc.perform(get("/user/list")) // URLにアクセス
+            .andExpect(status().isOk()) // ステータスを確認
+            .andExpect(model().attributeExists("userlist")) // Modelの内容を確認
+            .andExpect(model().hasNoErrors()) // Modelのエラー有無の確認
+            .andExpect(view().name("user/list")) // viewの確認
+            .andReturn(); // 内容の取得
+
+        // userの検証
+        // Modelからuserを取り出す
+        @SuppressWarnings("unchecked")
+        List<User> userList = (List<User>) result.getModelAndView().getModel().get("userlist");
+
+        // userListの件数が3件であることを検証
+        assertThat(userList).hasSize(3);
+
+        // userListから1件ずつ取り出し、idとnameを検証
+        assertThat(userList.get(0)).satisfies(user -> {
+            assertThat(user.getId()).isEqualTo(1);
+            assertThat(user.getName()).isEqualTo("キラメキ太郎");
+        });
+        assertThat(userList.get(1)).satisfies(user -> {
+            assertThat(user.getId()).isEqualTo(2);
+            assertThat(user.getName()).isEqualTo("キラメキ次郎");
+        });
+        assertThat(userList.get(2)).satisfies(user -> {
+            assertThat(user.getId()).isEqualTo(3);
+            assertThat(user.getName()).isEqualTo("キラメキ花子");
+        });
+
+    }
+
+
 }

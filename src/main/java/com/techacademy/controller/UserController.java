@@ -41,7 +41,6 @@ public class UserController {
         return "user/register";
     }
 
-    // ----- 変更ここから -----
     /** User登録処理 */
     @PostMapping("/register")
     public String postRegister(@Validated User user, BindingResult res, Model model) {
@@ -54,25 +53,44 @@ public class UserController {
         // 一覧画面にリダイレクト
         return "redirect:/user/list";
     }
-    // ----- 変更ここまで -----
 
+    // ----- 課題ここから -----
     /** User更新画面を表示 */
     @GetMapping("/update/{id}/")
-    public String getUser(@PathVariable("id") Integer id, Model model) {
-        // Modelに登録
-        model.addAttribute("user", service.getUser(id));
+    public String getUser(@PathVariable("id") Integer id, Model model, @ModelAttribute("user") User user) {
+        if (id != null) {
+            // idがnullではない場合、
+            // 一覧画面から遷移。
+            // Modelにはサービスから取得したUserをセットする
+            model.addAttribute("user", service.getUser(id));
+        } else {
+            // idがnullの場合、
+            // postUser()から遷移。
+            // ModelにはpostUser()から渡された引数のuserをセットする
+            model.addAttribute("user", user);
+        }
+
         // User更新画面に遷移
         return "user/update";
     }
 
     /** User更新処理 */
     @PostMapping("/update/{id}/")
-    public String postUser(User user) {
+    public String postUser(@PathVariable("id") Integer id, @Validated User user, BindingResult res, Model model) {
+        if(res.hasErrors()) {
+            // エラーがある場合 getUser() メソッドを呼び出す
+            // その際引数の id に null を設定する
+            // getUser() メソッドに user を渡す
+            model.addAttribute("user", user);
+            return getUser(null, model, user);
+        }
+
         // User登録
         service.saveUser(user);
         // 一覧画面にリダイレクト
         return "redirect:/user/list";
     }
+    // ----- 課題ここまで -----
 
     /** User削除処理 */
     @PostMapping(path="list", params="deleteRun")
